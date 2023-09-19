@@ -6,30 +6,27 @@ import os
 from dotenv import load_dotenv
 from jinja2 import Template
 import openai
-from io import StringIO
-
 from dataclasses import dataclass
 
 load_dotenv()
 
 
 @dataclass
-class ModelConst:
-    model_name: str = "gpt-4"
+class Const:
+    MODEL_NAME: str = "gpt-4"
+    GUILD_RULES_NAME: str = "Assassins_Guilds_Rules_2023_v06-New"
 
 
 # openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
 # For streamlit deployment, the api key is added to streamlit-secrets in the app settings (during/after delpoyment)
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+openai.api_key = st.secrets["OPEN_API_KEY"]
 
 
 def main():
     st.set_page_config(page_title="Chatbot Application", page_icon=":robot_face:", layout="centered")
     st.image('assets/big_ai.png', width=700)
-
-    # st.image('path/to/your/header_image.png', width=700)
 
     selected_page = option_menu(None, ["Editor", "Chat"], icons=['edit', 'comments'], menu_icon="bars", default_index=0,
                                 orientation="horizontal", styles={"nav-link-selected": {"background-color": "#7D9338"}})
@@ -54,20 +51,12 @@ def chat():
         st.session_state.query = st.session_state.input
         st.session_state.input = ''
 
-    # Uncomment the second line to have GPT4 option in the select box dropdown menu
-
-    model = ModelConst.model_name
+    model = Const.MODEL_NAME
 
     if 'generated' not in st.session_state:
         st.session_state['generated'] = []
     if 'past' not in st.session_state:
         st.session_state['past'] = []
-
-    # if st.session_state['generated']:
-
-    # for i in range(len(st.session_state['generated'])-1, -1, -1):
-    #     message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
-    #     message(st.session_state["generated"][i], key=str(i))
 
     def display():
 
@@ -75,11 +64,7 @@ def chat():
             message(st.session_state["generated"][i], key=str(i))
             message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
 
-        # with st.expander("Show Messages"):
-        #   st.write(st.session_state['messages'])
-
     st.text_input("Query: ", key="input", on_change=submit)
-    # st.text_input("Query: ", key="input", on_change=submit)
 
     if 'messages' not in st.session_state:
         st.session_state['messages'] = get_initial_message()
@@ -139,11 +124,12 @@ def editor():
     selected_file = st.selectbox('Select a file:', files, format_func=filename_display)
     selected_file_path = os.path.join(prompts_dir, selected_file)
 
-    with open(selected_file_path, 'r') as template_file:
-        template_file_content = template_file.read()
-        template = Template(template_file_content)
-
-    st.session_state.prompt = template_file_content
+    with open(selected_file_path, 'r') as prompt_template_file:
+        prompt_template_file_content = prompt_template_file.read()
+        template = Template(prompt_template_file_content.replace(Const.GUILD_RULES_NAME,
+                                                                 Const.GUILD_RULES_NAME.lower().lower().replace('-',
+                                                                                                                '_')))
+    st.session_state.prompt = prompt_template_file_content
 
     # List all files in the /rules directory
     rules_dir = os.path.join(script_dir, 'rules')
@@ -156,9 +142,10 @@ def editor():
             selected_rag_contents = file.read()
 
     st.text_area(label="Write your prompt here:", height=200, value=st.session_state.prompt, key="text_widget")
-    # Change here is the prompt - "assassins guild" placeholder name changes
-    rendered_text = Template(st.session_state.prompt).render(
-        killer_agency_guilds_rules_2023_v06_new=selected_rag_contents)
+
+    prompt_template_jinja_variable = Const.GUILD_RULES_NAME.lower().lower().replace('-', '_')
+    dict_to_render = {prompt_template_jinja_variable: selected_rag_contents}
+    rendered_text = template.render(dict_to_render)
 
     if st.button("Save Prompt", on_click=update_text_area, args=(rendered_text,)):
         st.success("Prompt saved successfully!")
