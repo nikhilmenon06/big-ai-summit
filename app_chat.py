@@ -18,11 +18,11 @@ class ModelConst:
     model_name: str = "gpt-4"
 
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
+# openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
 # For streamlit deployment, the api key is added to streamlit-secrets in the app settings (during/after delpoyment)
-# openai.api_key = st.secrets["OPEN_API_KEY"]
+openai.api_key = st.secrets["OPEN_API_KEY"]
 
 
 def main():
