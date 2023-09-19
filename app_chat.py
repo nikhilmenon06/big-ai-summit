@@ -22,7 +22,7 @@ class ModelConst:
 
 
 # For streamlit deployment, the api key is added to streamlit-secrets in the app settings (during/after delpoyment)
-openai.api_key = st.secrets["OPEN_API_KEY"]
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 
 def main():
