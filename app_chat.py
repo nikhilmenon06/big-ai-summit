@@ -17,11 +17,11 @@ class Const:
     GUILD_RULES_NAME: str = "Assassins_Guilds_Rules_2023_v06-New"
 
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
+#openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
 # For streamlit deployment, the api key is added to streamlit-secrets in the app settings (during/after delpoyment)
-# openai.api_key = st.secrets["OPENAI_API_KEY"]
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 
 def main():
