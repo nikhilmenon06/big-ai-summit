@@ -17,11 +17,11 @@ class Const:
     GUILD_RULES_NAME: str = "Assassins_Guilds_Rules_2023_v06-New"
 
 
-# openai.api_key = os.getenv('OPENAI_API_KEY')
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
 # For streamlit deployment, the api key is added to streamlit-secrets in the app settings (during/after delpoyment)
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 
 def main():
@@ -38,6 +38,8 @@ def main():
 
 
 def chat():
+    print("On Chat...................\n")
+    print(st.session_state.prompt)
     if 'prompt' not in st.session_state:
         st.session_state.prompt = ""
 
@@ -95,10 +97,17 @@ def editor():
         mod_filename = mod_filename.strip()
         return mod_filename
 
-    def update_text_area(rendered_text_here: str):
-        st.session_state.text_widget = rendered_text_here
+    def update_text_area(selected_rag_contents_pass):
+        guild_rules_clean = Const.GUILD_RULES_NAME.lower().lower().replace('-', '_')
+        template = Template(st.session_state["text_widget"].replace(Const.GUILD_RULES_NAME,guild_rules_clean))
+        prompt_template_jinja_variable = guild_rules_clean
+        dict_to_render = {prompt_template_jinja_variable: selected_rag_contents_pass}
+        st.session_state.text_widget = template.render(dict_to_render)
         st.session_state.prompt = st.session_state.text_widget
-        print(st.session_state.prompt)
+        # print("Prompt session variable after callback")
+        # print(st.session_state.prompt)
+        # print("Text Widget session variable after callback")
+        # print(st.session_state.text_widget)
 
     if 'generated' in st.session_state:
         st.session_state.bug_flag = 1
@@ -109,8 +118,8 @@ def editor():
     if 'prompt' not in st.session_state:
         st.session_state.prompt = ""
 
-    if 'text_widget' in st.session_state:
-        print(st.session_state['text_widget'])
+    if 'text_widget' not in st.session_state:
+        st.session_state.text_widget = ""
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -124,12 +133,12 @@ def editor():
     selected_file = st.selectbox('Select a file:', files, format_func=filename_display)
     selected_file_path = os.path.join(prompts_dir, selected_file)
 
-    with open(selected_file_path, 'r') as prompt_template_file:
-        prompt_template_file_content = prompt_template_file.read()
-        template = Template(prompt_template_file_content.replace(Const.GUILD_RULES_NAME,
-                                                                 Const.GUILD_RULES_NAME.lower().lower().replace('-',
-                                                                                                                '_')))
-    st.session_state.prompt = prompt_template_file_content
+    # with open(selected_file_path, 'r') as prompt_template_file:
+    #     prompt_template_file_content = prompt_template_file.read()
+    # template = Template(prompt_template_file_content.replace(Const.GUILD_RULES_NAME,
+    #                                                          Const.GUILD_RULES_NAME.lower().lower().replace('-',
+    #                                                                                                         '_')))
+    # st.session_state.prompt = prompt_template_file_content
 
     # List all files in the /rules directory
     rules_dir = os.path.join(script_dir, 'rules')
@@ -141,13 +150,9 @@ def editor():
         with open(selected_rag_path, "r") as file:
             selected_rag_contents = file.read()
 
-    st.text_area(label="Write your prompt here:", height=200, value=st.session_state.prompt, key="text_widget")
+    st.text_area(label="Write your prompt here:", height=200, key="text_widget")
 
-    prompt_template_jinja_variable = Const.GUILD_RULES_NAME.lower().lower().replace('-', '_')
-    dict_to_render = {prompt_template_jinja_variable: selected_rag_contents}
-    rendered_text = template.render(dict_to_render)
-
-    if st.button("Save Prompt", on_click=update_text_area, args=(rendered_text,)):
+    if st.button("Save Prompt", on_click=update_text_area, args=(selected_rag_contents,)):
         st.success("Prompt saved successfully!")
 
     st.markdown(
